@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUSUA • Xiao Galaxy Realm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+        
+        /* ========================================================
+           TEMA ANGKASA LUAR (DEEP SPACE NEBULA THEME)
+           ======================================================== */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #0d1b2a 0%, #08111e 50%, #02060d 100%);
+            color: #ffffff !important;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Background Nebula Buatan Manual untuk Keamanan Preview */
+        .space-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(34, 211, 238, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.15) 0%, transparent 45%);
+            z-index: -2;
+        }
+
+        #galaxy-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Tulisan Logo & Judul Gaya Sci-Fi Space */
+        .title-font {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 4px;
+        }
+        
+        .logo-orbit {
+            position: relative;
+            border: 1px dashed rgba(34, 211, 238, 0.4);
+            border-radius: 50%;
+            padding: 8px 25px;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+        }
+
+        .xiao-glow {
+            text-shadow: 0 0 15px #22d3ee, 0 0 30px rgba(34, 211, 238, 0.6);
+            color: #e0f7fa !important;
+        }
+
+        /* Kartu Produk Gaya Kaca Transparan Masa Depan (Glassmorphism Cyber) */
+        .space-card {
+            background: rgba(10, 25, 47, 0.45) !important;
+            border: 2px solid rgba(34, 211, 238, 0.3) !important;
+            border-radius: 16px !important;
+            box-shadow: inset 0 0 15px rgba(34, 211, 238, 0.1), 0 4px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .space-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.15), transparent);
+            transition: 0.5s;
+        }
+
+        .space-card:hover::before {
+            left: 100%;
+        }
+
+        .space-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(34, 211, 238, 0.8) !important;
+            box-shadow: 0 0 25px rgba(34, 211, 238, 0.35);
+        }
+
+        /* Desain Tombol Berenergi Plasma Cyan */
+        .btn-space-cyan {
+            background: transparent !important;
+            color: #22d3ee !important;
+            border: 1px solid #22d3ee !important;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            letter-spacing: 1px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-space-cyan:hover {
+            background: #22d3ee !important;
+            color: #000000 !important;
+            box-shadow: 0 0 20px #22d3ee;
+        }
+
+        /* Hiasan Judul Sektor Kosmik */
+        .sektor-header {
+            color: #22d3ee;
+            font-size: 1.6rem;
+            font-weight: bold;
+            border-bottom: 2px solid rgba(34, 211, 238, 0.3);
+            padding-bottom: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+
+        /* Grid Cadangan Otomatis */
+        .grid-fallback {
+            display: grid;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="space-bg"></div>
+    <canvas id="galaxy-canvas"></canvas>
+
+    <nav class="sticky top-0 z-50" style="background: rgba(8, 17, 30, 0.75); backdrop-filter: blur(10px); border-b: 1px solid rgba(34, 211, 238, 0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; max-w: 1200px; margin: 0 auto; padding: 15px 20px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px; animation: spin 20s linear infinite;">🪐</span>
+                <div class="logo-orbit">
+                    <h1 class="title-font text-2xl text-cyan-300 select-none xiao-glow m-0">JUSUA</h1>
+                </div>
+            </div>
+            <button onclick="toggleCart()" class="btn-space-cyan" style="padding: 10px 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-satellite"></i>
+                <span>CARGO</span>
+                <span id="cart-count" style="background: #22d3ee; color: #000; padding: 1px 7px; border-radius: 6px; font-size: 11px; font-weight: 900;">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 65vh; text-align: center; padding: 20px; position: relative;">
+        <div>
+            <p style="color: #22d3ee; letter-spacing: 6px; font-size: 11px; font-family: 'Orbitron', sans-serif; margin-bottom: 15px;">DEEP SPACE • REIGN SYSTEM</p>
+            <h1 class="title-font xiao-glow" style="font-size: 4.5rem; margin: 5px 0; font-weight: 900; tracking-widest">JUSUA</h1>
+            <p style="color: #8ab4f8; font-size: 16px; font-family: 'Orbitron', sans-serif;">Premium Engine Space & Virtual Network</p>
+            <button onclick="document.getElementById('products').scrollIntoView({ behavior: 'smooth' })" class="btn-space-cyan" style="margin-top: 35px; padding: 16px 36px; border-radius: 50px; font-size: 14px;">
+                ENTER SYSTEM MENU 🚀
+            </button>
+        </div>
+    </div>
+
+    <div id="products" style="max-w: 1100px; margin: 0 auto 60px auto; padding: 20px;">
+        
+        <div style="margin-bottom: 60px;">
+            <h2 class="title-font sektor-header">
+                <span>🛰️</span> SEKTOR PANEL PRIVATE
+            </h2>
+            <div class="grid-fallback" id="panel-list" style="grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));"></div>
+        </div>
+
+        <div>
+            <h2 class="title-font sektor-header">
+                <span>🛸</span> SEKTOR APK VANITAS
+            </h2>
+            <div class="grid-fallback" id="apk-list" style="grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));"></div>
+        </div>
+    </div>
+
+    <div id="cart-modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(2, 6, 13, 0.9); align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px);">
+        <div style="background: #0d1b2a; width: 90%; max-width: 480px; border-radius: 16px; border: 2px solid #22d3ee; padding: 25px; box-shadow: 0 0 40px rgba(34, 211, 238, 0.25);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(34, 211, 238, 0.3); padding-bottom: 15px;">
+                <h3 class="title-font" style="margin: 0; color: #22d3ee; font-size: 1.1rem;">🛰️ STORAGE CARGO BOX</h3>
+                <button onclick="toggleCart()" style="background: none; border: none; color: #ff6b6b; font-size: 2rem; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+            <div id="cart-items" style="max-height: 240px; overflow-y: auto; margin: 20px 0;"></div>
+            <div style="border-top: 1px solid rgba(34, 211, 238, 0.3); padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 25px; font-family: 'Orbitron', sans-serif;">
+                    <span style="color: #8ab4f8;">TOTAL COST</span>
+                    <span id="cart-total" style="color: #22d3ee; font-weight: bold; text-shadow: 0 0 10px #22d3ee;">Rp 0</span>
+                </div>
+                <button onclick="checkout()" class="btn-space-cyan" style="width: 100%; padding: 15px; border-radius: 10px; font-size: 14px; text-transform: uppercase;">
+                    TRANSMIT ORDER DATA VIA WA 📡
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === ENGINE BACKDROP BINTANG BERGERAK (SPACE STARFIELD) ===
+        const canvas = document.getElementById('galaxy-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let width, height;
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        class Star {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 1.8 + 0.4;
+                this.speed = Math.random() * 0.4 + 0.1;
+            }
+            update() {
+                this.y += this.speed;
+                if (this.y > height) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = "rgba(224, 247, 250, 0.85)";
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 120; i++) { stars.push(new Star()); }
+        }
+
+        function animateGalaxy() {
+            ctx.clearRect(0, 0, width, height);
+            stars.forEach(star => { star.update(); star.draw(); });
+            requestAnimationFrame(animateGalaxy);
+        }
+
+        // === ENGINE FORMAT RUPIAH MATEMATIS (Anti-Error Acode Engine) ===
+        function formatUang(angka) {
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        // === DATA DATABASE LAYANAN ===
+        let cart = [];
+
+        const panels = [ 
+            { name: "Panel Private RAM 1GB", price: 500 },
+            { name: "Panel Private RAM 2GB", price: 1500 },
+            { name: "Panel Private RAM 3GB", price: 2000 },
+            { name: "Panel Private RAM 4GB", price: 2500 },
+            { name: "Panel Private RAM 5GB", price: 3000 },
+            { name: "Panel Private RAM 6GB", price: 3500 },
+            { name: "Panel Private RAM 7GB", price: 4000 },
+            { name: "Panel Private RAM 8GB", price: 4500 },
+            { name: "Panel Private RAM 9GB", price: 5000 },
+            { name: "Panel Private RAM 10GB", price: 5500 },
+            { name: "Panel Private RAM UNLIMITED", price: 6000 }
+        ];
+
+        const apks = [
+            { name: "APK Vanitas - Akses Custom Hari", price: 2000 },
+            { name: "APK Vanitas - Akses 1 Bulan", price: 25000 },
+            { name: "APK Vanitas - Akses Permanen", price: 35000 }
+        ];
+
+        // === ENGINE RENDER KOSMIK ===
+        function renderPanels() {
+            const container = document.getElementById('panel-list');
+            container.innerHTML = '';
+            panels.forEach((item, i) => {
+                const card = document.createElement('div');
+                card.className = "space-card";
+                card.innerHTML = `
+                    <div>
+                        <p style="margin: 0; font-weight: 600; color: #ffffff; font-size: 15px; letter-spacing: 0.5px;">${item.name}</p>
+                        <p style="color: #22d3ee; font-size: 1.6rem; margin: 12px 0 0 0; font-weight: bold; font-family: 'Orbitron', sans-serif;">Rp ${formatUang(item.price)}</p>
+                    </div>
+                    <button onclick="addToCart('panel', ${i})" class="btn-space-cyan" style="margin-top: 20px; padding: 11px; border-radius: 8px; width: 100%;">
+                        ENGAGE UNIT
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderApks() {
+            const container = document.getElementById('apk-list');
+            container.innerHTML = '';
+            apks.forEach((item, i) => {
+                const card = document.createElement('div');
+                card.className = "space-card";
+                card.innerHTML = `
+                    <div>
+                        <p class="title-font" style="font-size: 14px; font-weight: bold; margin: 0; color: #ffffff; min-height: 40px;">${item.name}</p>
+                        <p style="color: #22d3ee; font-size: 1.8rem; margin: 15px 0; font-weight: bold; font-family: 'Orbitron', sans-serif;">Rp ${formatUang(item.price)}</p>
+                    </div>
+                    <button onclick="addToCart('apk', ${i})" class="btn-space-cyan" style="margin-top: 15px; padding: 12px; border-radius: 8px; width: 100%; border-color: #a855f7 !important; color: #e9d5ff !important;">
+                        LOAD MODULE
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // === ENGINE SISTEM BELANJA & INTEGRASI WA ===
+        function addToCart(type, index) {
+            const product = type === 'panel' ? panels[index] : apks[index];
+            const existingProduct = cart.find(item => item.name === product.name);
+            if (existingProduct) {
+                existingProduct.quantity += 1;
+            } else {
+                cart.push({...product, quantity: 1});
+            }
+            updateCartCount();
+            alert(`Sinyal Terkirim: \n${product.name} dimasukkan ke kompartemen cargo.`);
+        }
+
+        function updateCartCount() {
+            document.getElementById('cart-count').textContent = cart.reduce((acc, item) => acc + item.quantity, 0);
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            modal.style.display = (modal.style.display === 'none' || modal.style.display === '') ? 'flex' : 'none';
+            if (modal.style.display === 'flex') renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#5f758a; padding: 20px 0; font-size: 13px;">Cargo masih kosong, tidak ada data transmisi.</p>`;
+                document.getElementById('cart-total').textContent = `Rp 0`;
+                return;
+            }
+
+            cart.forEach((item, i) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                const itemRow = document.createElement('div');
+                itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid rgba(34, 211, 238, 0.1);";
+                itemRow.innerHTML = `
+                    <div>
+                        <p style="margin:0; font-size:13px; color:#ffffff; font-weight: 500;">${item.name}</p>
+                        <p style="margin:2px 0 0 0; font-size:11px; color:#22d3ee; font-family:'Orbitron', sans-serif;">QTY: ${item.quantity}x</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="color:#22d3ee; font-size:13px; font-weight:bold; font-family:'Orbitron', sans-serif;">Rp ${formatUang(subtotal)}</span><br>
+                        <button onclick="removeItem(${i})" style="background:none; border:none; color:#f87171; font-size:11px; margin-top:2px; padding:0; cursor:pointer;">EJECT</button>
+                    </div>
+                `;
+                container.appendChild(itemRow);
+            });
+            document.getElementById('cart-total').textContent = `Rp ${formatUang(total)}`;
+        }
+
+        function removeItem(i) {
+            cart.splice(i, 1);
+            renderCart();
+            updateCartCount();
+        }
+
+        function checkout() {
+            if (cart.length === 0) return;
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const items = cart.map(item => `• ${item.name} (${item.quantity}x)`).join('%0A');
+            const message = `Halo JUSUA SYSTEM,%0A%0ASaya ingin melakukan sinkronisasi order data berikut:%0A${items}%0A%0ATOTAL NET: Rp ${formatUang(total)}%0A%0AMohon konfirmasi jalur sinyal pembayaran koordinat terdekat, terima kasih!`;
+            window.open(`https://wa.me/6285713896486?text=${message}`, '_blank');
+        }
+
+        // Jalankan Inisialisasi Mutlak
+        resizeCanvas();
+        initStars();
+        animateGalaxy();
+        renderPanels();
+        renderApks();
+    </script>
+</body>
+</html>
